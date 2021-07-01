@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.library.model.BookCategoryModel;
 import com.example.library.model.BookModel;
+import com.example.library.payload.BookPayload;
+import com.example.library.repo.BookCategoryRepo;
 import com.example.library.repo.BookRepo;
 
 @RestController
@@ -21,6 +24,9 @@ public class BookController {
 
 	@Autowired
 	private BookRepo bookRepo;
+	
+	@Autowired
+	private BookCategoryRepo bookCategoryRepo;
 
 	@GetMapping
 	public List<BookModel> read() {
@@ -28,18 +34,23 @@ public class BookController {
 	}
 	
 	@PostMapping()
-	public BookModel create(@RequestBody BookModel bookModel) {
-		return bookRepo.save(bookModel);
+	public BookModel create(@RequestBody BookPayload bookPayload) {
+		BookCategoryModel bookCategory = bookCategoryRepo.findByCategory(bookPayload.getBookCategory());
+		BookModel book = new BookModel(bookPayload.getBookName(), bookPayload.getBookCode(), bookPayload.getAuthor(), bookPayload.getYears(), bookCategory);
+		return bookRepo.save(book);
 	}
 	
 
 	@PutMapping("/{id}")
-	public BookModel update(@PathVariable(value="id") Long id, @RequestBody BookModel bookModel) throws Exception {
+	public BookModel update(@PathVariable(value="id") Long id, @RequestBody BookPayload bookPayload) throws Exception {
 			BookModel book = bookRepo.findById(id).orElseThrow(() -> new Exception());
-			book.setBookName(bookModel.getBookName());
-			book.setBookCode(bookModel.getBookCode());
-			book.setAuthor(bookModel.getAuthor());
-			book.setYears(bookModel.getYears());
+			BookCategoryModel bookCategory = bookCategoryRepo.findByCategory(bookPayload.getBookCategory());
+			
+			book.setBookName(bookPayload.getBookName());
+			book.setBookCode(bookPayload.getBookCode());
+			book.setAuthor(bookPayload.getAuthor());
+			book.setYears(bookPayload.getYears());
+			book.setBookCategory(bookCategory);
 			return bookRepo.save(book);
 	}
 	
